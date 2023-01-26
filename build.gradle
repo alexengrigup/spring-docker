@@ -1,0 +1,70 @@
+plugins {
+    id 'org.springframework.boot' version '3.0.1' apply false
+    id 'io.spring.dependency-management' version '1.1.0' apply false
+}
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = 'dev.alexengrig.sample'
+    version = '0-SNAPSHOT'
+    sourceCompatibility = '17'
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2022.0.0'
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+        runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    bootBuildImage {
+        environment = [
+                'BP_OPENTELEMETRY_ENABLED': 'true',
+        ]
+        buildpacks = [
+                'paketo-buildpacks/java',
+                'gcr.io/paketo-buildpacks/opentelemetry',
+        ]
+        docker {
+            builderRegistry {
+                def buildRegistryUrl = System.getenv('DOCKER_BUILD_REGISTRY_URL')
+                if (buildRegistryUrl != null) {
+                    url = buildRegistryUrl
+                }
+            }
+            publishRegistry {
+                def pubRegistryUrl = System.getenv('DOCKER_PUB_REGISTRY_URL')
+                if (pubRegistryUrl != null) {
+                    url = pubRegistryUrl
+                }
+            }
+        }
+        verboseLogging = true
+    }
+
+}

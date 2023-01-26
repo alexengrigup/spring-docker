@@ -1,0 +1,103 @@
+name: sd
+
+services:
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - ${ZIPKIN_PORT}:9411
+    networks:
+      - spring
+
+#  jaeger:
+#    image: jaegertracing/all-in-one:latest
+#    ports:
+#      - ${JAEGER_PORT}:16686
+#      - ${JAEGER_COLLECTOR_PORT}:14250
+#    networks:
+#      - spring
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    networks:
+      - spring
+
+  otel-collector:
+    image: otel/opentelemetry-collector
+    environment:
+      - ZIPKIN_URL=${ZIPKIN_URL}
+      - JAEGER_COLLECTOR_URL=${JAEGER_COLLECTOR_URL}
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+    ports:
+      - 8888:8888
+      - 8889:8889
+      - ${OTEL_COLLECTOR_RECEIVER_GRPC_PORT}:4317
+      - ${OTEL_COLLECTOR_RECEIVER_HTTP_PORT}:4318
+    volumes:
+      - ./config/otel-collector-config.yml:/etc/otel-collector-config.yml
+    command:
+      - --config=/etc/otel-collector-config.yml
+    networks:
+      - spring
+    depends_on:
+      - zipkin
+#      - jaeger
+      - prometheus
+
+  discovery:
+    image: discovery-service:0-SNAPSHOT
+    environment:
+      - OTEL_JAVAAGENT_ENABLED=true
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      #      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_COLLECTOR_RECEIVER_GRPC_URL}
+      - OTEL_SERVICE_NAME=discovery-service
+    ports:
+      - ${DISCOVERY_PORT}:8761
+    networks:
+      - spring
+    depends_on:
+      - otel-collector
+
+  producer:
+    image: producer-service:0-SNAPSHOT
+    environment:
+      - OTEL_JAVAAGENT_ENABLED=true
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      #      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_COLLECTOR_RECEIVER_GRPC_URL}
+      - OTEL_SERVICE_NAME=producer-service
+      - DISCOVERY_URL=${DISCOVERY_URL}
+    ports:
+      - ${PRODUCER_PORT}:8082
+    networks:
+      - spring
+    depends_on:
+      - otel-collector
+      - discovery
+
+  consumer:
+    image: consumer-service:0-SNAPSHOT
+    environment:
+      - OTEL_JAVAAGENT_ENABLED=true
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      #      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_COLLECTOR_RECEIVER_GRPC_URL}
+      - OTEL_SERVICE_NAME=consumer-service
+      - DISCOVERY_URL=${DISCOVERY_URL}
+    ports:
+      - ${CONSUMER_PORT}:8081
+    networks:
+      - spring
+    depends_on:
+      - otel-collector
+      - discovery
+      - producer
+
+networks:
+  spring:
+    driver: bridge

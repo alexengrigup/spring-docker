@@ -1,0 +1,5 @@
+rootProject.name = 'spring-docker'
+
+include 'consumer-service'
+include 'discovery-service'
+include 'producer-service'
