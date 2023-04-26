@@ -42,6 +42,10 @@ subprojects {
         useJUnitPlatform()
     }
 
+    springBoot {
+        buildInfo()
+    }
+
     bootBuildImage {
         imageName = "docker.io/alexengrig/${project.name}:${project.version}"
         environment = [
