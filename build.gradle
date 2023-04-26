@@ -43,6 +43,7 @@ subprojects {
     }
 
     bootBuildImage {
+        imageName = "docker.io/alexengrig/${project.name}:${project.version}"
         environment = [
                 'BP_OPENTELEMETRY_ENABLED': 'true',
         ]

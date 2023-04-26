@@ -46,7 +46,7 @@ services:
       - prometheus
 
   discovery:
-    image: discovery-service:0-SNAPSHOT
+    image: alexengrig/discovery-service:${SERVICE_TAG}
     environment:
       - OTEL_JAVAAGENT_ENABLED=true
       - OTEL_TRACES_EXPORTER=otlp
@@ -62,7 +62,7 @@ services:
       - otel-collector
 
   producer:
-    image: producer-service:0-SNAPSHOT
+    image: alexengrig/producer-service:${SERVICE_TAG}
     environment:
       - OTEL_JAVAAGENT_ENABLED=true
       - OTEL_TRACES_EXPORTER=otlp
@@ -80,7 +80,7 @@ services:
       - discovery
 
   consumer:
-    image: consumer-service:0-SNAPSHOT
+    image: alexengrig/consumer-service:${SERVICE_TAG}
     environment:
       - OTEL_JAVAAGENT_ENABLED=true
       - OTEL_TRACES_EXPORTER=otlp
