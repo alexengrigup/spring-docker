@@ -47,23 +47,9 @@ subprojects {
                 'BP_OPENTELEMETRY_ENABLED': 'true',
         ]
         buildpacks = [
-                'paketo-buildpacks/java',
+                'gcr.io/paketo-buildpacks/java',
                 'gcr.io/paketo-buildpacks/opentelemetry',
         ]
-        docker {
-            builderRegistry {
-                def buildRegistryUrl = System.getenv('DOCKER_BUILD_REGISTRY_URL')
-                if (buildRegistryUrl != null) {
-                    url = buildRegistryUrl
-                }
-            }
-            publishRegistry {
-                def pubRegistryUrl = System.getenv('DOCKER_PUB_REGISTRY_URL')
-                if (pubRegistryUrl != null) {
-                    url = pubRegistryUrl
-                }
-            }
-        }
         verboseLogging = true
     }
 
