@@ -39,10 +39,10 @@ service:
         - batch
       exporters:
         - prometheus
-#    logs:
-#      receivers:
-#        - otlp
-#      processors:
-#        - batch
-#      exporters:
-#        - logging
+    logs:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - logging
