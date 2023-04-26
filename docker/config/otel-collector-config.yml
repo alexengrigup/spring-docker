@@ -17,9 +17,12 @@ exporters:
 #    tls:
 #      insecure: true
   prometheus:
-    endpoint: otel-collector:8889
-  prometheusremotewrite:
-    endpoint: ${PROMETHEUS_URL}/api/v1/push
+    # /metrics
+    endpoint: ${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
+#  prometheusremotewrite:
+#    endpoint: ${PROMETHEUS_URL}/api/v1/push
+  logging:
+    loglevel: debug
 
 service:
   pipelines:
@@ -38,7 +41,7 @@ service:
         - batch
       exporters:
         - prometheus
-        - prometheusremotewrite
+#        - prometheusremotewrite
 #    logs:
 #      receivers:
 #        - otlp
