@@ -12,10 +12,10 @@ exporters:
     endpoint: ${ZIPKIN_URL}/api/v2/spans
     tls:
       insecure: true
-#  jaeger:
-#    endpoint: ${JAEGER_COLLECTOR_URL}
-#    tls:
-#      insecure: true
+  jaeger:
+    endpoint: ${JAEGER_COLLECTOR_URL}
+    tls:
+      insecure: true
   prometheus:
     # /metrics
     endpoint: ${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
@@ -31,7 +31,7 @@ service:
         - batch
       exporters:
         - zipkin
-#        - jaeger
+        - jaeger
     metrics:
       receivers:
         - otlp

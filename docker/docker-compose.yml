@@ -8,13 +8,13 @@ services:
     networks:
       - spring
 
-#  jaeger:
-#    image: jaegertracing/all-in-one:latest
-#    ports:
-#      - ${JAEGER_PORT}:16686
-#      - ${JAEGER_COLLECTOR_PORT}:14250
-#    networks:
-#      - spring
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - ${JAEGER_PORT}:16686
+      - ${JAEGER_COLLECTOR_PORT}:14250
+    networks:
+      - spring
 
   prometheus:
     image: prom/prometheus
@@ -46,7 +46,7 @@ services:
       - spring
     depends_on:
       - zipkin
-#      - jaeger
+      - jaeger
       - prometheus
 
   discovery:
