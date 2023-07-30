@@ -9,7 +9,7 @@ services:
       - spring
 
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one
     ports:
       - ${JAEGER_PORT}:16686
       - ${JAEGER_COLLECTOR_PORT}:14250
@@ -46,7 +46,7 @@ services:
       - spring
     depends_on:
       - zipkin
-      - jaeger
+#      - jaeger
       - prometheus
 
   discovery:
