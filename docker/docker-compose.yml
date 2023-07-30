@@ -27,13 +27,35 @@ services:
     networks:
       - spring
 
+  elasticsearch:
+    image: elasticsearch:${ELASTIC_STACK_TAG}
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    networks:
+      - spring
+    ports:
+      - ${ELASTICSEARCH_PORT}:9200
+
+  kibana:
+    image: kibana:${ELASTIC_STACK_TAG}
+    environment:
+      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_URL}
+    ports:
+      - ${KIBANA_PORT}:5601
+    networks:
+      - spring
+    depends_on:
+      - elasticsearch
+
   otel-collector:
-    image: otel/opentelemetry-collector
+    image: otel/opentelemetry-collector-contrib
     environment:
       - OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT=${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
       - ZIPKIN_URL=${ZIPKIN_URL}
       - JAEGER_COLLECTOR_URL=${JAEGER_COLLECTOR_URL}
       - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
     ports:
       - ${OTEL_COLLECTOR_RECEIVER_GRPC_PORT}:4317
       - ${OTEL_COLLECTOR_RECEIVER_HTTP_PORT}:4318
@@ -48,6 +70,7 @@ services:
       - zipkin
 #      - jaeger
       - prometheus
+      - kibana
 
   discovery:
     image: alexengrig/discovery-service:${SERVICE_TAG}

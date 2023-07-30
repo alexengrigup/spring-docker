@@ -19,6 +19,14 @@ exporters:
   prometheus:
     # /metrics
     endpoint: ${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
+  elasticsearch/log:
+    endpoints:
+      - ${ELASTICSEARCH_URL}
+    logs_index: sd_log_index
+    sending_queue:
+      enabled: true
+      num_consumers: 20
+      queue_size: 1000
   logging:
     loglevel: debug
 
@@ -45,4 +53,4 @@ service:
       processors:
         - batch
       exporters:
-        - logging
+        - elasticsearch/log
