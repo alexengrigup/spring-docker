@@ -48,6 +48,18 @@ services:
     depends_on:
       - elasticsearch
 
+  grafana:
+    image: grafana/grafana-enterprise
+    environment:
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - ZIPKIN_URL=${ZIPKIN_URL}
+    ports:
+      - ${GRAFANA_PORT}:3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - spring
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib
     environment:
