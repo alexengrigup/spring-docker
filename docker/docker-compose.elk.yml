@@ -1,0 +1,51 @@
+name: sd
+
+services:
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - ${ZIPKIN_PORT}:9411
+    networks:
+      - sd-network
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - ${JAEGER_PORT}:16686
+      - ${JAEGER_COLLECTOR_PORT}:14250
+    networks:
+      - sd-network
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - sd-network
+
+  elasticsearch:
+    image: elasticsearch:${ELASTIC_STACK_TAG}
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    networks:
+      - sd-network
+    ports:
+      - ${ELASTICSEARCH_PORT}:9200
+
+  kibana:
+    image: kibana:${ELASTIC_STACK_TAG}
+    environment:
+      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_URL}
+    ports:
+      - ${KIBANA_PORT}:5601
+    networks:
+      - sd-network
+    depends_on:
+      - elasticsearch
+
+networks:
+  sd-network:
+    driver: bridge

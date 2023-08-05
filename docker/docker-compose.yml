@@ -1,92 +1,6 @@
 name: sd
 
 services:
-  zipkin:
-    image: openzipkin/zipkin
-    ports:
-      - ${ZIPKIN_PORT}:9411
-    networks:
-      - spring
-
-  jaeger:
-    image: jaegertracing/all-in-one
-    ports:
-      - ${JAEGER_PORT}:16686
-      - ${JAEGER_COLLECTOR_PORT}:14250
-    networks:
-      - spring
-
-  prometheus:
-    image: prom/prometheus
-    ports:
-      - ${PROMETHEUS_PORT}:9090
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - spring
-
-  elasticsearch:
-    image: elasticsearch:${ELASTIC_STACK_TAG}
-    environment:
-      - xpack.security.enabled=false
-      - discovery.type=single-node
-    networks:
-      - spring
-    ports:
-      - ${ELASTICSEARCH_PORT}:9200
-
-  kibana:
-    image: kibana:${ELASTIC_STACK_TAG}
-    environment:
-      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_URL}
-    ports:
-      - ${KIBANA_PORT}:5601
-    networks:
-      - spring
-    depends_on:
-      - elasticsearch
-
-  minio:
-    image: minio/minio
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
-    ports:
-      - ${MINIO_PORT}:9000
-      - 45913:45913
-    volumes:
-      - minio-data:/data
-    command: server /data
-    networks:
-      - spring
-
-  mimir:
-    image: grafana/mimir
-    ports:
-      - ${MIMIR_PORT}:9009
-    volumes:
-      - ./mimir/mimir.yml:/etc/mimir/mimir.yml
-    command:
-      - -config.file=/etc/mimir/mimir.yml
-    networks:
-      - spring
-    depends_on:
-      - minio
-
-  grafana:
-    image: grafana/grafana-enterprise
-    environment:
-      - PROMETHEUS_URL=${PROMETHEUS_URL}
-      - ZIPKIN_URL=${ZIPKIN_URL}
-    ports:
-      - ${GRAFANA_PORT}:3000
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-    networks:
-      - spring
-    depends_on:
-      - mimir
-
   otel-collector:
     image: otel/opentelemetry-collector-contrib
     environment:
@@ -103,13 +17,7 @@ services:
     volumes:
       - ./otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml
     networks:
-      - spring
-    depends_on:
-      - zipkin
-      #      - jaeger
-      - prometheus
-      - kibana
-      - grafana
+      - sd-network
 
   discovery:
     image: alexengrig/discovery-service:${SERVICE_TAG}
@@ -120,7 +28,7 @@ services:
     ports:
       - ${DISCOVERY_PORT}:8761
     networks:
-      - spring
+      - sd-network
     depends_on:
       - otel-collector
 
@@ -134,7 +42,7 @@ services:
     ports:
       - ${PRODUCER_PORT}:8082
     networks:
-      - spring
+      - sd-network
     depends_on:
       - otel-collector
       - discovery
@@ -149,15 +57,12 @@ services:
     ports:
       - ${CONSUMER_PORT}:8081
     networks:
-      - spring
+      - sd-network
     depends_on:
       - otel-collector
       - discovery
       - producer
 
-volumes:
-  minio-data:
-
 networks:
-  spring:
+  sd-network:
     driver: bridge

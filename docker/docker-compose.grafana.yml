@@ -1,0 +1,50 @@
+name: sd
+
+services:
+  minio:
+    image: minio/minio
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    ports:
+      - ${MINIO_PORT}:9000
+      - 45913:45913
+    volumes:
+      - minio-data:/data
+    command: server /data
+    networks:
+      - sd-network
+
+  mimir:
+    image: grafana/mimir
+    ports:
+      - ${MIMIR_PORT}:9009
+    volumes:
+      - ./mimir/mimir.yml:/etc/mimir/mimir.yml
+    command:
+      - -config.file=/etc/mimir/mimir.yml
+    networks:
+      - sd-network
+    depends_on:
+      - minio
+
+  grafana:
+    image: grafana/grafana-enterprise
+    environment:
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - ZIPKIN_URL=${ZIPKIN_URL}
+    ports:
+      - ${GRAFANA_PORT}:3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - sd-network
+    depends_on:
+      - mimir
+
+volumes:
+  minio-data:
+
+networks:
+  sd-network:
+    driver: bridge
