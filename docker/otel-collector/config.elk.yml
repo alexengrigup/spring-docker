@@ -1,0 +1,56 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: localhost:4317
+
+processors:
+  batch:
+
+exporters:
+  zipkin:
+    endpoint: ${ZIPKIN_URL}/api/v2/spans
+    tls:
+      insecure: true
+  jaeger:
+    endpoint: ${JAEGER_COLLECTOR_URL}
+    tls:
+      insecure: true
+  prometheus:
+    # /metrics
+    endpoint: ${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
+  elasticsearch/log:
+    endpoints:
+      - ${ELASTICSEARCH_URL}
+    logs_index: sd_log_index
+    sending_queue:
+      enabled: true
+      num_consumers: 20
+      queue_size: 1000
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - zipkin
+        #- jaeger
+    metrics:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - prometheus
+    logs:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - elasticsearch/log

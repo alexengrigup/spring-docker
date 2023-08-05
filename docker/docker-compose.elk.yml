@@ -8,20 +8,20 @@ services:
     networks:
       - sd-network
 
-  jaeger:
-    image: jaegertracing/all-in-one
-    ports:
-      - ${JAEGER_PORT}:16686
-      - ${JAEGER_COLLECTOR_PORT}:14250
-    networks:
-      - sd-network
+#  jaeger:
+#    image: jaegertracing/all-in-one
+#    ports:
+#      - ${JAEGER_PORT}:16686
+#      - ${JAEGER_COLLECTOR_PORT}:14250
+#    networks:
+#      - sd-network
 
   prometheus:
     image: prom/prometheus
     ports:
       - ${PROMETHEUS_PORT}:9090
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.elk.yml:/etc/prometheus/prometheus.yml
     networks:
       - sd-network
 
@@ -44,6 +44,24 @@ services:
     networks:
       - sd-network
     depends_on:
+      - elasticsearch
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    environment:
+      - OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT=${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
+      - ZIPKIN_URL=${ZIPKIN_URL}
+      - JAEGER_COLLECTOR_URL=${JAEGER_COLLECTOR_URL}
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
+    volumes:
+      - ./otel-collector/config.elk.yaml:/etc/otelcol-contrib/config.yaml
+    networks:
+      - sd-network
+    depends_on:
+      - zipkin
+      #- jaeger
+      - prometheus
       - elasticsearch
 
 networks:
