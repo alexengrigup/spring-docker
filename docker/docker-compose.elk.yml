@@ -1,4 +1,4 @@
-name: sd
+name: sd-elk
 
 services:
   zipkin:
