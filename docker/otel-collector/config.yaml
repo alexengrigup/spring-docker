@@ -19,6 +19,8 @@ exporters:
   prometheus:
     # /metrics
     endpoint: ${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
+  prometheusremotewrite/mimir:
+    endpoint: ${MIMIR_URL}/api/v1/push
   elasticsearch/log:
     endpoints:
       - ${ELASTICSEARCH_URL}
@@ -47,6 +49,7 @@ service:
         - batch
       exporters:
         - prometheus
+        - prometheusremotewrite/mimir
     logs:
       receivers:
         - otlp

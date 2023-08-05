@@ -46,6 +46,33 @@ services:
     depends_on:
       - elasticsearch
 
+  minio:
+    image: minio/minio
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    ports:
+      - ${MINIO_PORT}:9000
+      - 45913:45913
+    volumes:
+      - minio-data:/data
+    command: server /data
+    networks:
+      - spring
+
+  mimir:
+    image: grafana/mimir
+    ports:
+      - ${MIMIR_PORT}:9009
+    volumes:
+      - ./mimir/mimir.yml:/etc/mimir/mimir.yml
+    command:
+      - -config.file=/etc/mimir/mimir.yml
+    networks:
+      - spring
+    depends_on:
+      - minio
+
   grafana:
     image: grafana/grafana-enterprise
     environment:
@@ -57,6 +84,8 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - spring
+    depends_on:
+      - mimir
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib
@@ -65,6 +94,7 @@ services:
       - ZIPKIN_URL=${ZIPKIN_URL}
       - JAEGER_COLLECTOR_URL=${JAEGER_COLLECTOR_URL}
       - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - MIMIR_URL=${MIMIR_URL}
       - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
     ports:
       - ${OTEL_COLLECTOR_RECEIVER_GRPC_PORT}:4317
@@ -76,7 +106,7 @@ services:
       - spring
     depends_on:
       - zipkin
-#      - jaeger
+      #      - jaeger
       - prometheus
       - kibana
       - grafana
@@ -124,6 +154,9 @@ services:
       - otel-collector
       - discovery
       - producer
+
+volumes:
+  minio-data:
 
 networks:
   spring:
