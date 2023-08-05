@@ -1,24 +1,6 @@
 name: sd
 
 services:
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib
-    environment:
-      - OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT=${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_ENDPOINT}
-      - ZIPKIN_URL=${ZIPKIN_URL}
-      - JAEGER_COLLECTOR_URL=${JAEGER_COLLECTOR_URL}
-      - PROMETHEUS_URL=${PROMETHEUS_URL}
-      - MIMIR_URL=${MIMIR_URL}
-      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
-    ports:
-      - ${OTEL_COLLECTOR_RECEIVER_GRPC_PORT}:4317
-      - ${OTEL_COLLECTOR_RECEIVER_HTTP_PORT}:4318
-      - ${OTEL_COLLECTOR_EXPORTER_PROMETHEUS_PORT}:8889
-    volumes:
-      - ./otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml
-    networks:
-      - sd-network
-
   discovery:
     image: alexengrig/discovery-service:${SERVICE_TAG}
     environment:
@@ -29,8 +11,6 @@ services:
       - ${DISCOVERY_PORT}:8761
     networks:
       - sd-network
-    depends_on:
-      - otel-collector
 
   producer:
     image: alexengrig/producer-service:${SERVICE_TAG}
@@ -44,7 +24,6 @@ services:
     networks:
       - sd-network
     depends_on:
-      - otel-collector
       - discovery
 
   consumer:
@@ -59,7 +38,6 @@ services:
     networks:
       - sd-network
     depends_on:
-      - otel-collector
       - discovery
       - producer
 
