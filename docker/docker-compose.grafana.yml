@@ -1,6 +1,33 @@
-name: sd
+name: sd-grafana
 
 services:
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    volumes:
+      - ./prometheus/prometheus.grafana.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+    networks:
+      - sd-network
+
+  tempo:
+    image: grafana/tempo
+    environment:
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+    volumes:
+      - tempo-data:/tmp/tempo
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml
+    command:
+      - -config.file=/etc/tempo/tempo.yml
+    networks:
+      - sd-network
+    depends_on:
+      - prometheus
+
   minio:
     image: minio/minio
     environment:
@@ -32,7 +59,7 @@ services:
     image: grafana/grafana-enterprise
     environment:
       - PROMETHEUS_URL=${PROMETHEUS_URL}
-      - ZIPKIN_URL=${ZIPKIN_URL}
+      - TEMPO_URL=${TEMPO_URL}
     ports:
       - ${GRAFANA_PORT}:3000
     volumes:
@@ -40,9 +67,24 @@ services:
     networks:
       - sd-network
     depends_on:
-      - mimir
+      - tempo
+      #- mimir
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    environment:
+      - TEMPO_OTLP_ENDPOINT=${TEMPO_OTLP_ENDPOINT}
+      - MIMIR_URL=${MIMIR_URL}
+    volumes:
+      - ./otel-collector/config.grafana.yml:/etc/otelcol-contrib/config.yaml
+    networks:
+      - sd-network
+    depends_on:
+      - tempo
+      #- mimir
 
 volumes:
+  tempo-data:
   minio-data:
 
 networks:

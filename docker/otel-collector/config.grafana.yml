@@ -1,0 +1,43 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: localhost:4317
+
+processors:
+  batch:
+
+exporters:
+  otlp/tempo:
+    endpoint: ${TEMPO_OTLP_ENDPOINT}
+    tls:
+      insecure: true
+  prometheusremotewrite/mimir:
+    endpoint: ${MIMIR_URL}/api/v1/push
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - otlp/tempo
+#    metrics:
+#      receivers:
+#        - otlp
+#      processors:
+#        - batch
+#      exporters:
+#        - prometheusremotewrite/mimir
+#    logs:
+#      receivers:
+#        - otlp
+#      processors:
+#        - batch
+#      exporters:
+#        #TODO: loki
+#        - loki
