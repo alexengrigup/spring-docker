@@ -2,7 +2,6 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: localhost:4317
 
 processors:
   batch:
@@ -12,8 +11,14 @@ exporters:
     endpoint: ${TEMPO_OTLP_ENDPOINT}
     tls:
       insecure: true
-  prometheusremotewrite/mimir:
-    endpoint: ${MIMIR_URL}/api/v1/push
+  prometheusremotewrite:
+    endpoint: ${PROMETHEUS_URL}/api/v1/write
+    resource_to_telemetry_conversion:
+      enabled: true
+  loki:
+    endpoint: ${LOKI_URL}/loki/api/v1/push
+    tls:
+      insecure: true
   logging:
     loglevel: debug
 
@@ -26,18 +31,17 @@ service:
         - batch
       exporters:
         - otlp/tempo
-#    metrics:
-#      receivers:
-#        - otlp
-#      processors:
-#        - batch
-#      exporters:
-#        - prometheusremotewrite/mimir
-#    logs:
-#      receivers:
-#        - otlp
-#      processors:
-#        - batch
-#      exporters:
-#        #TODO: loki
-#        - loki
+    metrics:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - prometheusremotewrite
+    logs:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - loki
