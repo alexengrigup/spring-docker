@@ -5,6 +5,31 @@ receivers:
 
 processors:
   batch:
+  attributes:
+    actions:
+      - action: insert
+        key: loki.attribute.labels
+        value: 'Trace ID'
+
+      # the following attributes are added manually here in the example, but would
+      # probably be added by other processors or straight from the source
+#      - action: insert
+#        key: spanid
+#        from_context: 'Span ID'
+#  resource:
+#    attributes:
+#      - action: insert
+#        key: loki.resource.labels
+#        value: host_name, pod_name
+#
+#      # the following attributes are added manually here in the example, but would
+#      # probably be added by other processors or straight from the source
+#      - action: insert
+#        key: host_name
+#        value: guarana
+#      - action: insert
+#        key: pod_name
+#        value: guarana-pod-01
 
 exporters:
   otlp/tempo:
@@ -43,5 +68,8 @@ service:
         - otlp
       processors:
         - batch
+        - attributes
+        #- resource
       exporters:
         - loki
+        - logging
